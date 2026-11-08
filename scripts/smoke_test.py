@@ -13,7 +13,7 @@ from generals import GeneralsEnv, get_observation
 from generals.agents import ExpanderAgent
 from generals.core import game
 
-from generals_rl.features import decode_action, encode_action, observe
+from macbeth.features import decode_action, encode_action, observe
 
 
 def single_game(env, key):

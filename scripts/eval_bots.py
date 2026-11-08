@@ -11,8 +11,8 @@ import time
 import jax
 import jax.random as jrandom
 
-from generals_rl.evaluate import eval_vs_bot, make_eval_env
-from generals_rl.play import load_policy
+from macbeth.evaluate import eval_vs_bot, make_eval_env
+from macbeth.play import load_policy
 
 
 def main():

@@ -23,7 +23,7 @@ from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 
-from generals_rl.data import replay_prep, replays
+from macbeth.data import replay_prep, replays
 
 NP = replays.NP
 

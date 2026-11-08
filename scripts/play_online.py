@@ -31,10 +31,10 @@ import jax.random as jrandom
 import numpy as np
 from generals.remote import GeneralsIOClient
 
-from generals_rl.features import decode_action, history_init, history_push, observe
-from generals_rl.model import masked_logits
-from generals_rl.online import LiveView, all_actions, state_from_server
-from generals_rl.play import load_policy
+from macbeth.features import decode_action, history_init, history_push, observe
+from macbeth.model import masked_logits
+from macbeth.online import LiveView, all_actions, state_from_server
+from macbeth.play import load_policy
 
 
 class PolicyClient(GeneralsIOClient):

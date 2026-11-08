@@ -18,8 +18,8 @@ import time
 
 import numpy as np
 
-from generals_rl.humanexe import HumanExe, policy_actor
-from generals_rl.play import load_policy, realistic_state
+from macbeth.humanexe import HumanExe, policy_actor
+from macbeth.play import load_policy, realistic_state
 
 
 def main():

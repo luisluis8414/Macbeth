@@ -12,9 +12,9 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from generals_rl.bc import Config, Dataset, make_batch, sample_positions
-from generals_rl.model import masked_logits
-from generals_rl.play import load_policy
+from macbeth.bc import Config, Dataset, make_batch, sample_positions
+from macbeth.model import masked_logits
+from macbeth.play import load_policy
 
 
 def main():

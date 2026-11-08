@@ -20,8 +20,8 @@ from urllib.parse import parse_qs, urlparse
 
 from flax.serialization import msgpack_restore
 
-from generals_rl.features import PLANE_NAMES
-from generals_rl.play import LiveGame, bot_lineup
+from macbeth.features import PLANE_NAMES
+from macbeth.play import LiveGame, bot_lineup
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGE = ROOT / "web" / "watch.html"

@@ -6,7 +6,7 @@
 The defaults are the setup of the H100 run (configs/selfplay_modal.sh); on a 16 GB GPU use --num-envs 16
 --micro-batch 64. A run continues from runs/<name>/resume.msgpack if that file exists.
 """
-from generals_rl.selfplay import main
+from macbeth.selfplay import main
 
 if __name__ == "__main__":
     main()
