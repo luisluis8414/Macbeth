@@ -6,7 +6,6 @@
 
 <p>
 <img src="https://img.shields.io/badge/python-3.11+-3776AB?logo=python&logoColor=white" alt="python 3.11+">
-<img src="https://img.shields.io/badge/JAX-Flax-6E4E9A" alt="JAX, Flax">
 <img src="https://img.shields.io/badge/RL-PPO%20self--play-3B6EA8" alt="PPO self-play">
 <img src="https://img.shields.io/badge/generals.io-8--player%20FFA-C0392B" alt="8-player FFA">
 </p>
@@ -64,13 +63,13 @@ per player from the public scoreboard:
   trail of its own moves.
 - **Scoreboard:** land and army of every player and how they changed over the last 1 to 512 ticks.
 
-![observation](assets/observation.svg)
+<p align="center"><img src="assets/observation.svg" alt="observation" width="100%"></p>
 
 *A 4-player game at tick 230: the full board, what the blue player sees of it, and 8 of the 82 planes computed from that view.*
 
 ## Network
 
-![architecture](assets/architecture.svg)
+<p align="center"><img src="assets/architecture.svg" alt="architecture" width="100%"></p>
 
 The board is cut into 3x3 patches, so a 36x36 board becomes 144 tokens, plus one token per player and one for the
 whole game. A small CNN before the transformer lets every cell see its neighbours, and one after it turns the
@@ -144,21 +143,6 @@ uv run scripts/play_online.py --run runs/selfplay --user-id "$GENERALS_USER_ID" 
   that start a new plan. Human.exe decides those from internal plans the board does not show, so a longer history
   did not help.
 - **Not yet better than Human.exe**, and only lightly tested against humans.
-
-## Learnings
-
-- **Imitation first saves a lot of time.** Starting self-play from the clone gave a decent player within hours.
-  From scratch, early self-play mostly learns to expand.
-- **The simulator's maps were not real.** Its generals spawned at the edges and every general got a similar amount
-  of room: patterns a policy can learn and then miss on real maps. We measured 1,148 real games and now generate maps
-  that match them.
-- **Reward shaping can teach the wrong thing.** Shaping that paid every tick rewarded moving out of the general at
-  once, and the policy lost the clone's habit of waiting like good players do. Now it is read only on the
-  land-bonus ticks.
-- **Measure against fixed opponents.** In self-play the win rate stays near the fair share as the opponents improve
-  with the policy, so progress only shows against fixed bots and Human.exe.
-- **Cloud runs need care.** A local launcher that waits for the cloud run cancels it when the PC shuts down, and
-  every new configuration costs 15-30 minutes of compiling the first time.
 
 ## Credits
 
