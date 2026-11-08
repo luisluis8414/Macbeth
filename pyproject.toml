@@ -1,0 +1,36 @@
+[project]
+name = "generals-rl"
+version = "0.1.0"
+description = "Macbeth: a generals.io 8-player free-for-all agent, a clone of Human.exe improved by self-play PPO (JAX)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Simulator, pinned to a commit (no git needed: installed from the GitHub tarball)
+    "generals-bots @ https://github.com/strakam/generals-bots/archive/954927f508aa47899019d66317cc313af3e9cc19.tar.gz",
+    "jax>=0.6",
+    "flax>=0.10",
+    "optax>=0.2",
+    "numpy>=2.0",
+    "scipy>=1.11",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+# On the training machine (NVIDIA GPU): uv sync --extra cuda
+cuda = ["jax[cuda12]>=0.6"]
+
+[dependency-groups]
+dev = ["ruff>=0.6", "modal>=1.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/generals_rl"]
+
+[tool.ruff]
+line-length = 110

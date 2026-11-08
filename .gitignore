@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+runs/
+
+# Human.exe (scripts/setup_humanexe.sh): the clone, its logs and the machine-specific config
+third_party/generals-bot/
+third_party/humanexe_logs/
+third_party/run_config.txt
+
+# Working notes, analyses and data stay local: the plan, docs/ (write-ups, figures, analysis pages; the pages the
+# code serves are in web/), the replay data and its report, and the papers we read
+/PLAN.md
+/docs/
+/data/
+/papers/
