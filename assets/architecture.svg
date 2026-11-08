@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Network architecture: the observation goes through a CNN stem and is cut into 3x3 patch tokens, which with 8 player tokens and a CLS token pass a 7-layer transformer encoder; the patch outputs go through a CNN decoder, joined with the stem features, to per-cell move logits; the CLS output gives the pass logit and a 128-bin value distribution. Below: one transformer layer in detail.">
-<rect width="920" height="440" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 830 360" width="830" height="360" role="img" aria-label="Network architecture: the observation goes through a CNN stem and is cut into 3x3 patch tokens, which with 8 player tokens and a CLS token pass a 7-layer transformer encoder (one layer shown in detail above it); the CLS output gives the pass logit and a 128-bin value distribution, the patch outputs go through a CNN decoder, joined with the stem features, to per-cell move logits.">
+<rect width="830" height="360" fill="#FFFFFF"/>
 <defs>
   <marker id="ah" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0L8,4L0,8z" fill="#4A4D46"/></marker>
   <marker id="ahb" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0L8,4L0,8z" fill="#3B6EA8"/></marker>
@@ -11,140 +11,140 @@
     .ln { stroke: #4A4D46; stroke-width: 1.3; fill: none; marker-end: url(#ah); }
     .line { stroke: #4A4D46; stroke-width: 1.3; fill: none; }
     .skip { stroke: #3B6EA8; stroke-width: 1.3; fill: none; stroke-dasharray: 5 3; marker-end: url(#ahb); }
-    .zoom { stroke: #B9B5AA; stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .zoom { stroke: #C9B98F; stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
     .in { fill: #F2F0EA; stroke: #A9A59A; stroke-width: 1; }
     .cnn { fill: #E6EBF2; stroke: #3B6EA8; stroke-width: 1; }
+    .tf { fill: #FAF4E6; stroke: #A07818; stroke-width: 1.2; }
     .out { fill: #EEE8F3; stroke: #6E4E9A; stroke-width: 1; }
   </style>
 </defs>
 
-<!-- labels of the main row, all above their element -->
-<text class="b" x="60" y="62" text-anchor="middle">observation</text>
-<text class="s" x="60" y="78" text-anchor="middle">36 × 36 × 82</text>
-<text class="s" x="60" y="93" text-anchor="middle">+ 8 player rows</text>
-<text class="b" x="205" y="62" text-anchor="middle">CNN stem</text>
-<text class="s" x="205" y="78" text-anchor="middle">2 residual blocks</text>
-<text class="s" x="205" y="93" text-anchor="middle">36 × 36 × 64</text>
-<text class="b" x="346" y="62" text-anchor="middle">tokens</text>
-<text class="s" x="346" y="78" text-anchor="middle">CLS, 8 players,</text>
-<text class="s" x="346" y="93" text-anchor="middle">144 patches</text>
+<!-- ===== main row, axis y = 190 ===== -->
 
 <!-- observation -->
-<rect class="in" x="40" y="110" width="80" height="80"/>
-<rect class="in" x="35" y="115" width="80" height="80"/>
-<rect class="in" x="30" y="120" width="80" height="80"/>
-<rect class="in" x="25" y="125" width="80" height="80"/>
-<rect class="in" x="20" y="130" width="80" height="80"/>
-<path d="M33.3,130v80M46.7,130v80M60,130v80M73.3,130v80M86.7,130v80M20,143.3h80M20,156.7h80M20,170h80M20,183.3h80M20,196.7h80" stroke="#DDD9CF" stroke-width="0.8"/>
-<path class="ln" d="M128,170H152"/>
+<rect class="in" x="40" y="132" width="76" height="76"/>
+<rect class="in" x="35" y="137" width="76" height="76"/>
+<rect class="in" x="30" y="142" width="76" height="76"/>
+<rect class="in" x="25" y="147" width="76" height="76"/>
+<rect class="in" x="20" y="152" width="76" height="76"/>
+<path d="M32.7,152v76M45.3,152v76M58,152v76M70.7,152v76M83.3,152v76M20,164.7h76M20,177.3h76M20,190h76M20,202.7h76M20,215.3h76" stroke="#DDD9CF" stroke-width="0.8"/>
+<text class="b" x="58" y="256" text-anchor="middle">observation</text>
+<text class="s" x="58" y="272" text-anchor="middle">36 × 36 × 82</text>
+<text class="s" x="58" y="287" text-anchor="middle">+ 8 player rows</text>
+<path class="ln" d="M122,190H144"/>
 
 <!-- CNN stem -->
-<rect class="cnn" x="170" y="120" width="80" height="80"/>
-<rect class="cnn" x="165" y="125" width="80" height="80"/>
-<rect class="cnn" x="160" y="130" width="80" height="80"/>
-<path class="ln" d="M258,200H336"/>
-<text class="s" x="297" y="192" text-anchor="middle">3×3 patches</text>
+<rect class="cnn" x="160" y="142" width="76" height="76"/>
+<rect class="cnn" x="155" y="147" width="76" height="76"/>
+<rect class="cnn" x="150" y="152" width="76" height="76"/>
+<text class="b" x="188" y="256" text-anchor="middle">CNN stem</text>
+<text class="s" x="188" y="272" text-anchor="middle">2 residual blocks</text>
+<text class="s" x="188" y="287" text-anchor="middle">36 × 36 × 64</text>
+<path class="ln" d="M242,205H300"/>
+<text class="s" x="271" y="197" text-anchor="middle">3×3 patches</text>
 
 <!-- input tokens -->
-<rect x="340" y="97" width="12" height="12" fill="#6E4E9A"/>
-<rect x="340" y="115" width="12" height="12" fill="#A9A59A"/>
-<rect x="340" y="130" width="12" height="12" fill="#A9A59A"/>
-<rect x="340" y="145" width="12" height="12" fill="#A9A59A"/>
-<text class="s" x="346" y="168" text-anchor="middle">⋮</text>
-<rect x="340" y="175" width="12" height="12" fill="#3B6EA8"/>
-<rect x="340" y="190" width="12" height="12" fill="#3B6EA8"/>
-<rect x="340" y="205" width="12" height="12" fill="#3B6EA8"/>
-<rect x="340" y="220" width="12" height="12" fill="#3B6EA8"/>
-<text class="s" x="346" y="248" text-anchor="middle">⋮</text>
-<path class="ln" d="M360,170H398"/>
+<rect x="306" y="150" width="12" height="12" fill="#6E4E9A"/>
+<rect x="306" y="166" width="12" height="12" fill="#A9A59A"/>
+<rect x="306" y="180" width="12" height="12" fill="#A9A59A"/>
+<rect x="306" y="196" width="12" height="12" fill="#3B6EA8"/>
+<rect x="306" y="210" width="12" height="12" fill="#3B6EA8"/>
+<rect x="306" y="224" width="12" height="12" fill="#3B6EA8"/>
+<text class="b" x="312" y="256" text-anchor="middle">tokens</text>
+<text class="s" x="312" y="272" text-anchor="middle">CLS, 8 players,</text>
+<text class="s" x="312" y="287" text-anchor="middle">144 patches</text>
+<path class="ln" d="M324,190H346"/>
 
 <!-- transformer encoder -->
-<rect x="400" y="110" width="180" height="120" rx="8" fill="#E6EBF2" stroke="#3B6EA8" stroke-width="1.2"/>
-<text class="b" x="490" y="146" text-anchor="middle">transformer encoder</text>
-<text class="t" x="490" y="166" text-anchor="middle">7 layers, width 448</text>
-<text class="t" x="490" y="183" text-anchor="middle">8 heads, relative</text>
-<text class="t" x="490" y="200" text-anchor="middle">position bias</text>
-<path class="ln" d="M582,170H616"/>
+<rect class="tf" x="350" y="145" width="170" height="90" rx="8"/>
+<rect x="368" y="157" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<rect x="368" y="167" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<rect x="368" y="177" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<rect x="368" y="187" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<rect x="368" y="197" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<rect x="368" y="207" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<rect x="368" y="217" width="134" height="7" rx="2" fill="#E9D9AE"/>
+<text class="b" x="435" y="256" text-anchor="middle">transformer encoder</text>
+<text class="s" x="435" y="272" text-anchor="middle">7 layers, width 448, 8 heads</text>
+<text class="s" x="435" y="287" text-anchor="middle">relative position bias</text>
+<path class="ln" d="M522,190H544"/>
 
 <!-- output tokens -->
-<rect x="624" y="97" width="12" height="12" fill="#6E4E9A"/>
-<rect x="624" y="115" width="12" height="12" fill="#A9A59A"/>
-<rect x="624" y="130" width="12" height="12" fill="#A9A59A"/>
-<rect x="624" y="145" width="12" height="12" fill="#A9A59A"/>
-<text class="s" x="630" y="168" text-anchor="middle">⋮</text>
-<rect x="624" y="175" width="12" height="12" fill="#3B6EA8"/>
-<rect x="624" y="190" width="12" height="12" fill="#3B6EA8"/>
-<rect x="624" y="205" width="12" height="12" fill="#3B6EA8"/>
-<rect x="624" y="220" width="12" height="12" fill="#3B6EA8"/>
-<text class="s" x="630" y="248" text-anchor="middle">⋮</text>
+<rect x="550" y="150" width="12" height="12" fill="#6E4E9A"/>
+<rect x="550" y="166" width="12" height="12" fill="#A9A59A"/>
+<rect x="550" y="180" width="12" height="12" fill="#A9A59A"/>
+<rect x="550" y="196" width="12" height="12" fill="#3B6EA8"/>
+<rect x="550" y="210" width="12" height="12" fill="#3B6EA8"/>
+<rect x="550" y="224" width="12" height="12" fill="#3B6EA8"/>
 
-<!-- heads from the CLS output -->
-<path class="line" d="M638,103H660V41"/>
-<path class="ln" d="M660,41H698"/>
-<path class="ln" d="M660,84H698"/>
-<path class="line" d="M660,41V84"/>
-<rect x="700" y="28" width="190" height="26" rx="3" class="out"/>
-<text class="t" x="795" y="45" text-anchor="middle">pass logit</text>
-<rect x="700" y="62" width="190" height="46" rx="3" class="out"/>
-<text class="t" x="712" y="81">value</text>
-<text class="s" x="712" y="97">128 bins, mean</text>
-<path d="M800,100h80" stroke="#6E4E9A" stroke-width="1"/>
-<rect x="804" y="98" width="4" height="2" fill="#6E4E9A"/><rect x="809" y="96" width="4" height="4" fill="#6E4E9A"/>
-<rect x="814" y="93" width="4" height="7" fill="#6E4E9A"/><rect x="819" y="88" width="4" height="12" fill="#6E4E9A"/>
-<rect x="824" y="81" width="4" height="19" fill="#6E4E9A"/><rect x="829" y="75" width="4" height="25" fill="#6E4E9A"/>
-<rect x="834" y="72" width="4" height="28" fill="#6E4E9A"/><rect x="839" y="76" width="4" height="24" fill="#6E4E9A"/>
-<rect x="844" y="83" width="4" height="17" fill="#6E4E9A"/><rect x="849" y="89" width="4" height="11" fill="#6E4E9A"/>
-<rect x="854" y="94" width="4" height="6" fill="#6E4E9A"/><rect x="859" y="97" width="4" height="3" fill="#6E4E9A"/>
-<rect x="864" y="98" width="4" height="2" fill="#6E4E9A"/>
+<!-- CNN decoder -->
+<path class="ln" d="M566,205H610"/>
+<text class="s" x="588" y="197" text-anchor="middle">patches</text>
+<rect class="cnn" x="624" y="142" width="76" height="76"/>
+<rect class="cnn" x="619" y="147" width="76" height="76"/>
+<rect class="cnn" x="614" y="152" width="76" height="76"/>
+<text class="b" x="652" y="256" text-anchor="middle">CNN decoder</text>
+<text class="s" x="652" y="272" text-anchor="middle">conv 3×3, conv 1×1</text>
+<path class="ln" d="M706,190H728"/>
 
-<!-- decoder and moves -->
-<text class="b" x="745" y="130" text-anchor="middle">CNN decoder</text>
-<text class="s" x="745" y="145" text-anchor="middle">conv 3×3, 1×1</text>
-<text class="b" x="860" y="130" text-anchor="middle">move logits</text>
-<text class="s" x="860" y="145" text-anchor="middle">36 × 36 × 8</text>
-<path class="ln" d="M638,200H703"/>
-<text class="s" x="670" y="192" text-anchor="middle">unpatchify</text>
-<rect class="cnn" x="715" y="155" width="70" height="70"/>
-<rect class="cnn" x="710" y="160" width="70" height="70"/>
-<rect class="cnn" x="705" y="165" width="70" height="70"/>
-<path class="ln" d="M790,200H818"/>
-<rect class="out" x="830" y="155" width="70" height="70"/>
-<rect class="out" x="825" y="160" width="70" height="70"/>
-<rect class="out" x="820" y="165" width="70" height="70"/>
+<!-- move logits -->
+<rect class="out" x="744" y="142" width="76" height="76"/>
+<rect class="out" x="739" y="147" width="76" height="76"/>
+<rect class="out" x="734" y="152" width="76" height="76"/>
+<text class="b" x="772" y="256" text-anchor="middle">move logits</text>
+<text class="s" x="772" y="272" text-anchor="middle">36 × 36 × 8</text>
+<text class="s" x="772" y="287" text-anchor="middle">4 directions × all / half</text>
 
-<!-- skip: stem features to the decoder -->
-<path class="skip" d="M200,212V412H740V239"/>
-<text class="s" x="470" y="406" text-anchor="middle" fill="#3B6EA8">stem features (skip connection)</text>
+<!-- skip: stem features into the decoder -->
+<path class="skip" d="M232,222H260V322H602V222H610"/>
+<text class="s" x="428" y="316" text-anchor="middle" fill="#3B6EA8">stem features (skip connection)</text>
 
-<!-- zoom: one transformer layer -->
-<path class="zoom" d="M400,230L300,290M580,230L690,290"/>
-<rect x="300" y="290" width="390" height="95" rx="6" fill="#FBFAF7" stroke="#C3BFB3" stroke-width="1"/>
-<text class="s" x="495" y="377" text-anchor="middle">one of the 7 transformer layers</text>
-<path class="line" d="M306,340H310"/>
-<path class="ln" d="M300,340H310"/>
-<rect x="312" y="327" width="40" height="26" rx="3" fill="#F2F0EA" stroke="#A9A59A"/>
-<text class="t" x="332" y="344" text-anchor="middle">LN</text>
-<path class="ln" d="M352,340H364"/>
-<rect x="366" y="323" width="112" height="34" rx="3" fill="#E6EBF2" stroke="#3B6EA8"/>
-<text class="t" x="422" y="337" text-anchor="middle">self-attention</text>
-<text class="s" x="422" y="351" text-anchor="middle">+ rel. position bias</text>
-<path class="ln" d="M478,340H487"/>
-<circle cx="494" cy="340" r="7" fill="#FFFFFF" stroke="#4A4D46" stroke-width="1.2"/>
-<path d="M490,340h8M494,336v8" stroke="#4A4D46" stroke-width="1.2"/>
-<path class="ln" d="M501,340H510"/>
-<rect x="512" y="327" width="40" height="26" rx="3" fill="#F2F0EA" stroke="#A9A59A"/>
-<text class="t" x="532" y="344" text-anchor="middle">LN</text>
-<path class="ln" d="M552,340H564"/>
-<rect x="566" y="323" width="62" height="34" rx="3" fill="#EEF3EC" stroke="#2F5D46"/>
-<text class="t" x="597" y="337" text-anchor="middle">MLP</text>
-<text class="s" x="597" y="351" text-anchor="middle">448→1344</text>
-<path class="ln" d="M628,340H639"/>
-<circle cx="646" cy="340" r="7" fill="#FFFFFF" stroke="#4A4D46" stroke-width="1.2"/>
-<path d="M642,340h8M646,336v8" stroke="#4A4D46" stroke-width="1.2"/>
-<path class="ln" d="M653,340H688"/>
-<!-- residuals -->
-<path class="ln" d="M306,340V307H494V331"/>
-<path class="ln" d="M505,340V307H646V331"/>
+<!-- ===== heads from the CLS output, top right ===== -->
+<path class="line" d="M566,156H588V51"/>
+<path class="ln" d="M588,51H612"/>
+<path class="ln" d="M588,100H612"/>
+<rect class="out" x="614" y="38" width="206" height="26" rx="3"/>
+<text class="t" x="717" y="55" text-anchor="middle">pass logit</text>
+<rect class="out" x="614" y="74" width="206" height="52" rx="3"/>
+<text class="t" x="626" y="95">value</text>
+<text class="s" x="626" y="111">128 bins, mean</text>
+<path d="M722,116h88" stroke="#6E4E9A" stroke-width="1"/>
+<rect x="726" y="114" width="5" height="2" fill="#6E4E9A"/><rect x="732" y="111" width="5" height="5" fill="#6E4E9A"/>
+<rect x="738" y="107" width="5" height="9" fill="#6E4E9A"/><rect x="744" y="101" width="5" height="15" fill="#6E4E9A"/>
+<rect x="750" y="93" width="5" height="23" fill="#6E4E9A"/><rect x="756" y="87" width="5" height="29" fill="#6E4E9A"/>
+<rect x="762" y="85" width="5" height="31" fill="#6E4E9A"/><rect x="768" y="89" width="5" height="27" fill="#6E4E9A"/>
+<rect x="774" y="96" width="5" height="20" fill="#6E4E9A"/><rect x="780" y="103" width="5" height="13" fill="#6E4E9A"/>
+<rect x="786" y="109" width="5" height="7" fill="#6E4E9A"/><rect x="792" y="112" width="5" height="4" fill="#6E4E9A"/>
+<rect x="798" y="114" width="5" height="2" fill="#6E4E9A"/>
+<text class="s" x="717" y="24" text-anchor="middle">from the CLS token</text>
 
-<text class="s" x="20" y="432">15.5M parameters. The critic (training only) is the same network at width 256 and 4 layers and sees the whole board without fog.</text>
+<!-- ===== one transformer layer, top left ===== -->
+<path class="zoom" d="M350,145L230,112M520,145L580,112"/>
+<rect x="230" y="14" width="350" height="98" rx="6" fill="#FFFDF8" stroke="#C9B98F" stroke-width="1"/>
+<path class="ln" d="M238,66H252"/>
+<rect x="254" y="53" width="36" height="26" rx="3" fill="#F2F0EA" stroke="#A9A59A"/>
+<text class="t" x="272" y="70" text-anchor="middle">LN</text>
+<path class="ln" d="M290,66H300"/>
+<rect x="302" y="49" width="104" height="34" rx="3" fill="#FAF4E6" stroke="#A07818"/>
+<text class="t" x="354" y="63" text-anchor="middle">self-attention</text>
+<text class="s" x="354" y="77" text-anchor="middle">+ position bias</text>
+<path class="ln" d="M406,66H415"/>
+<circle cx="422" cy="66" r="7" fill="#FFFFFF" stroke="#4A4D46" stroke-width="1.2"/>
+<path d="M418,66h8M422,62v8" stroke="#4A4D46" stroke-width="1.2"/>
+<path class="ln" d="M429,66H440"/>
+<rect x="442" y="53" width="36" height="26" rx="3" fill="#F2F0EA" stroke="#A9A59A"/>
+<text class="t" x="460" y="70" text-anchor="middle">LN</text>
+<path class="ln" d="M478,66H488"/>
+<rect x="490" y="49" width="56" height="34" rx="3" fill="#FAF4E6" stroke="#A07818"/>
+<text class="t" x="518" y="63" text-anchor="middle">MLP</text>
+<text class="s" x="518" y="77" text-anchor="middle">× 3 width</text>
+<path class="ln" d="M546,66H553"/>
+<circle cx="560" cy="66" r="7" fill="#FFFFFF" stroke="#4A4D46" stroke-width="1.2"/>
+<path d="M556,66h8M560,62v8" stroke="#4A4D46" stroke-width="1.2"/>
+<path class="line" d="M567,66H574"/>
+<path class="ln" d="M244,66V32H422V57"/>
+<path class="ln" d="M434,66V32H560V57"/>
+<text class="s" x="405" y="103" text-anchor="middle">one of the 7 layers</text>
+
+<text class="s" x="20" y="352">15.5M parameters. The critic (training only) is the same network at width 256 and 4 layers and sees the whole board without fog.</text>
 </svg>
