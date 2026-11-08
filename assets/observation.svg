@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1022 522" width="1022" height="522" role="img" aria-label="A 4-player game at tick 230: the full board, what the blue player sees, and 8 of the 82 observation planes">
-<rect width="1022" height="522" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -18 1070 558" width="1070" height="558" role="img" aria-label="A 4-player game at tick 230: the full board, what the blue player sees, and 8 of the 82 observation planes">
+<rect x="-24" y="-18" width="1070" height="558" fill="#FFFFFF"/>
 <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L8,4L0,8z" fill="#6B6E66"/></marker></defs>
 <text x="100.0" y="20" font-size="13" text-anchor="middle" fill="#1E211E" font-weight="bold" font-family="Helvetica, Arial, sans-serif">full game state</text>
 <rect x="0" y="30" width="10" height="10" fill="#F2F0EA"/>
