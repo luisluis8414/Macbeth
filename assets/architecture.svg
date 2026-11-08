@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 830 360" width="830" height="360" role="img" aria-label="Network architecture: the observation goes through a CNN stem and is cut into 3x3 patch tokens, which with 8 player tokens and a CLS token pass a 7-layer transformer encoder (one layer shown in detail above it); the CLS output gives the pass logit and a 128-bin value distribution, the patch outputs go through a CNN decoder, joined with the stem features, to per-cell move logits.">
-<rect width="830" height="360" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -12 874 386" width="874" height="386" role="img" aria-label="Network architecture: the observation goes through a CNN stem and is cut into 3x3 patch tokens, which with 8 player tokens and a CLS token pass a 7-layer transformer encoder (one layer shown in detail above it); the CLS output gives the pass logit and a 128-bin value distribution, the patch outputs go through a CNN decoder, joined with the stem features, to per-cell move logits.">
+<rect x="-12" y="-12" width="874" height="386" fill="#FFFFFF"/>
 <defs>
   <marker id="ah" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0L8,4L0,8z" fill="#4A4D46"/></marker>
   <marker id="ahb" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0L8,4L0,8z" fill="#3B6EA8"/></marker>
