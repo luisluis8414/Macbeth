@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>generals-rl Live Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght,wdth@600..800,75..100&family=Public+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: run picker + status tiles on top, then a 2-column grid of line charts (training, validation, play). */
+:root {
+  --bg: #f3f4f1; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #7c7b76; --line: #dcdcd6; --grid: #ececE7;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --good: #1f8a4c; --bad: #c4362c;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121312; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #8f8e86; --line: #34342f; --grid: #2a2a27;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #3fb36c; --bad: #e66767; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121312; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #8f8e86; --line: #34342f; --grid: #2a2a27;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #3fb36c; --bad: #e66767; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 18px; }
+header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+h1 { font: 800 1.6rem/1.1 var(--f-display); font-stretch: 82%; margin: 0; }
+h2 { font: 700 0.95rem var(--f-display); margin: 0; }
+select { font: 0.9rem var(--f-mono); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.status { font: 600 0.75rem var(--f-mono); padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); }
+.status.running::before { content: "● "; color: var(--good); }
+.status.finished::before { content: "✓ "; color: var(--good); }
+.status.failed::before { content: "✕ "; color: var(--bad); }
+.status.stale::before { content: "◌ "; color: var(--muted); }
+.updated { font: 0.8rem var(--f-mono); color: var(--muted); margin-left: auto; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.tile .v { font: 700 1.3rem var(--f-display); font-variant-numeric: tabular-nums; }
+.tile .k { font-size: 0.78rem; color: var(--ink-2); }
+.bar { height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--s1); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.78rem; color: var(--ink-2); }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 5px; }
+.note { font-size: 0.78rem; color: var(--muted); }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font: 11px var(--f-mono); fill: var(--muted); }
+.empty { padding: 40px 0; text-align: center; color: var(--muted); }
+.err { color: var(--bad); font: 0.85rem var(--f-mono); }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font: 12px/1.45 var(--f-mono); padding: 6px 9px; border-radius: 6px; z-index: 5; }
+code { font-family: var(--f-mono); font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Live Training</h1>
+    <label for="run" class="note">Run</label>
+    <select id="run"></select>
+    <span class="status" id="status">–</span>
+    <span class="updated" id="updated"></span>
+  </header>
+  <div class="err" id="err" hidden></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="bar" title="progress"><i id="progress" style="width:0%"></i></div>
+  <div class="grid" id="charts"></div>
+  <p class="note">Data: Modal Dict <code>generals-rl-metrics</code>, written by the training container every 15 s; this page reloads every 10 s.
+    Costs are estimates (elapsed time × GPU price), the bill on modal.com is authoritative.</p>
+</div>
+<div class="tip" id="tip" hidden></div>
+<script>
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const fmt = (v, d = 0) => v == null || Number.isNaN(v) ? "–" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const dur = h => h == null ? "–" : h < 1 ? `${Math.round(h * 60)} min` : `${Math.floor(h)} h ${Math.round((h % 1) * 60)} min`;
+let current = null;
+
+const CHARTS = [
+  { title: "Policy loss (cross-entropy)", series: [["train_ce", "train", "--s1"], ["val_ce", "validation", "--s2"]] },
+  { title: "Move accuracy (top-1)", series: [["train_acc", "train", "--s1"], ["val_acc", "validation", "--s2"]], pct: true },
+  { title: "Value error (MSE of placement)", series: [["train_value_mse", "train", "--s1"], ["val_value_mse", "validation", "--s2"]] },
+  { title: "Win rate vs. bots (8-player FFA)", series: "win_vs_", pct: true, ref: [0.125, "fair share 12.5 %"] },
+  { title: "Mean placement vs. bots (lower is better)", series: "place_vs_", ref: [4.5, "fair 4.5"], invert: true },
+  { title: "Training speed (steps per second)", series: [["_sps", "steps/s", "--s3"]] },
+];
+
+function seriesFor(def, rows) {
+  if (Array.isArray(def.series)) return def.series;
+  const keys = [...new Set(rows.flatMap(r => Object.keys(r)).filter(k => k.startsWith(def.series)))].sort();
+  const colors = ["--s1", "--s2", "--s3"];
+  return keys.map((k, i) => [k, k.slice(def.series.length), colors[i % 3]]);
+}
+
+function lineChart(def, rows) {
+  const card = document.createElement("div"); card.className = "card";
+  const series = seriesFor(def, rows);
+  card.innerHTML = `<h2>${def.title}</h2><div class="legend">${series.map(([, l, c]) => `<span><i style="background:var(${c})"></i>${l}</span>`).join("")}</div>`;
+  const pts = series.map(([k]) => rows.filter(r => r[k] != null).map(r => [r.step, r[k]]));
+  const all = pts.flat();
+  if (!all.length) { card.insertAdjacentHTML("beforeend", `<div class="empty">no data yet</div>`); return card; }
+  const W = 560, H = 210, m = { l: 48, r: 12, t: 8, b: 26 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const xs = all.map(p => p[0]), ys = all.map(p => p[1]).concat(def.ref ? [def.ref[0]] : []);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs, x0 + 1);
+  let y0 = Math.min(...ys), y1 = Math.max(...ys); if (y1 - y0 < 1e-9) { y0 -= 0.5; y1 += 0.5; }
+  const pad = (y1 - y0) * 0.08; y0 -= pad; y1 += pad; if (def.pct) { y0 = Math.max(0, y0); }
+  const X = v => m.l + iw * (v - x0) / (x1 - x0), Y = v => m.t + ih - ih * (v - y0) / (y1 - y0);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": def.title });
+  for (let i = 0; i <= 4; i++) {
+    const v = y0 + (y1 - y0) * i / 4, y = Y(v);
+    el("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: "var(--grid)" }, svg);
+    el("text", { x: m.l - 6, y: y + 4, "text-anchor": "end" }, svg).textContent = def.pct ? fmt(v * 100, 0) + "%" : fmt(v, Math.abs(y1 - y0) < 2 ? 2 : 1);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const v = x0 + (x1 - x0) * i / 4;
+    el("text", { x: X(v), y: H - 6, "text-anchor": "middle" }, svg).textContent = fmt(v);
+  }
+  if (def.ref) {
+    el("line", { x1: m.l, x2: W - m.r, y1: Y(def.ref[0]), y2: Y(def.ref[0]), stroke: "var(--ink-2)", "stroke-dasharray": "4 3" }, svg);
+    el("text", { x: W - m.r, y: Y(def.ref[0]) - 5, "text-anchor": "end", style: "fill:var(--ink-2)" }, svg).textContent = def.ref[1];
+  }
+  series.forEach(([, , c], i) => {
+    const p = pts[i]; if (!p.length) return;
+    el("path", { d: p.map((q, j) => `${j ? "L" : "M"}${X(q[0]).toFixed(1)},${Y(q[1]).toFixed(1)}`).join(""), fill: "none", stroke: `var(${c})`, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    if (p.length < 40) p.forEach(q => el("circle", { cx: X(q[0]), cy: Y(q[1]), r: 3, fill: `var(${c})`, stroke: "var(--surface)", "stroke-width": 1.5 }, svg));
+  });
+  // crosshair + tooltip
+  const cross = el("line", { y1: m.t, y2: m.t + ih, stroke: "var(--muted)", "stroke-dasharray": "2 3", visibility: "hidden" }, svg);
+  const hit = el("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" }, svg);
+  hit.addEventListener("mousemove", e => {
+    const r = svg.getBoundingClientRect(), sx = (e.clientX - r.left) * W / r.width;
+    const step = x0 + (sx - m.l) / iw * (x1 - x0);
+    const lines = series.map(([k, l], i) => {
+      const p = pts[i]; if (!p.length) return null;
+      const q = p.reduce((a, b) => Math.abs(b[0] - step) < Math.abs(a[0] - step) ? b : a);
+      return [q[0], `${l}: <b>${def.pct ? fmt(q[1] * 100, 1) + " %" : fmt(q[1], 3)}</b>`];
+    }).filter(Boolean);
+    if (!lines.length) return;
+    cross.setAttribute("x1", X(lines[0][0])); cross.setAttribute("x2", X(lines[0][0])); cross.setAttribute("visibility", "visible");
+    const t = $("tip"); t.hidden = false; t.innerHTML = `step ${fmt(lines[0][0])}<br>` + lines.map(l => l[1]).join("<br>");
+    t.style.left = Math.min(e.clientX + 12, innerWidth - 200) + "px"; t.style.top = (e.clientY + 12) + "px";
+  });
+  hit.addEventListener("mouseleave", () => { $("tip").hidden = true; cross.setAttribute("visibility", "hidden"); });
+  card.appendChild(svg);
+  return card;
+}
+
+function withSpeed(rows) {
+  const train = rows.filter(r => r.train_ce != null);
+  return rows.map(r => r).concat(train.slice(1).map((r, i) => {
+    const prev = train[i], dt = (r.time_h - prev.time_h) * 3600;
+    return { step: r.step, _sps: dt > 0 ? (r.step - prev.step) / dt : null };
+  }));
+}
+
+async function loadRuns() {
+  const res = await fetch("/api/runs"); const runs = await res.json();
+  if (runs.error) throw new Error(runs.error);
+  const sel = $("run"), keep = sel.value;
+  sel.innerHTML = runs.map(r => `<option value="${r.name}">${r.name} · ${r.status}</option>`).join("");
+  if (!runs.length) { $("charts").innerHTML = `<div class="empty">No training runs yet. Start one with <code>uv run modal run --detach scripts/modal_app.py --cmd train ...</code></div>`; return null; }
+  sel.value = runs.some(r => r.name === keep) ? keep : runs[0].name;
+  return sel.value;
+}
+
+async function refresh() {
+  try {
+    const name = current || await loadRuns(); if (!name) return;
+    current = name;
+    const res = await fetch("/api/run?name=" + encodeURIComponent(name)); const run = await res.json();
+    if (run.error) throw new Error(run.error);
+    $("err").hidden = true;
+    const age = (Date.now() / 1000 - run.updated);
+    const status = run.status === "running" && age > 120 ? "stale" : run.status;
+    $("status").className = "status " + status; $("status").textContent = status === "stale" ? "no update for " + dur(age / 3600) : status;
+    $("updated").textContent = "updated " + new Date(run.updated * 1000).toLocaleTimeString();
+    const rows = run.rows;
+    const last = [...rows].reverse().find(r => r.train_ce != null) || {};
+    const speed = withSpeed(rows).filter(r => r._sps).slice(-5).map(r => r._sps);
+    const sps = speed.length ? speed.reduce((a, b) => a + b) / speed.length : null;
+    const eta = sps && run.total_steps ? (run.total_steps - run.step) / sps / 3600 : null;
+    const cost = run.elapsed_h * run.usd_per_hour, maxCost = run.max_hours * run.usd_per_hour;
+    const tiles = [
+      [`${fmt(run.step)}${run.total_steps ? " / " + fmt(run.total_steps) : ""}`, "steps"],
+      [sps ? fmt(sps, 1) : "–", "steps / s"],
+      [dur(run.elapsed_h), "elapsed"],
+      [run.status === "running" ? dur(eta) : "–", "time left (estimate)"],
+      [`$${fmt(cost, 2)}`, `cost so far (cap $${fmt(maxCost, 2)})`],
+      [run.gpu || "–", "GPU"],
+      [last.val_acc != null ? fmt(last.val_acc * 100, 1) + " %" : "–", "validation accuracy"],
+    ];
+    $("tiles").innerHTML = tiles.map(([v, k]) => `<div class="tile"><span class="v">${v}</span><span class="k">${k}</span></div>`).join("");
+    $("progress").style.width = run.total_steps ? Math.min(100, 100 * run.step / run.total_steps) + "%" : "0%";
+    const data = withSpeed(rows);
+    const charts = $("charts"); charts.innerHTML = "";
+    for (const def of CHARTS) charts.appendChild(lineChart(def, data));
+  } catch (e) {
+    $("err").hidden = false; $("err").textContent = "Could not load metrics: " + e.message;
+  }
+}
+
+$("run").addEventListener("change", e => { current = e.target.value; refresh(); });
+setInterval(async () => { try { await loadRuns(); } catch (e) {} refresh(); }, 10000);
+loadRuns().then(refresh).catch(e => { $("err").hidden = false; $("err").textContent = "Could not load runs: " + e.message; });
+</script>
+</body>
+</html>
