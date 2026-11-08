@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>generals-rl Live Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght,wdth@600..800,75..100&family=Public+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: setup bar on top, board with playback controls left, scoreboard + log right; stacks on narrow screens. */
+:root {
+  --bg: #f1f2ef; --surface: #ffffff; --ink: #1c2023; --muted: #5f686c; --line: #d3d7d3; --accent: #2b6d5f;
+  --cell-neutral: #dfe2dc; --cell-fog: #3a4145; --cell-fog-struct: #555d61; --mountain: #8b9195; --board-bg: #c9cdc8;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181a; --surface: #1c2225; --ink: #e4e7e5; --muted: #98a1a4; --line: #333b3e; --accent: #5fb7a2;
+    --cell-neutral: #3b4346; --cell-fog: #23292c; --cell-fog-struct: #394145; --mountain: #6d7478; --board-bg: #0f1214; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181a; --surface: #1c2225; --ink: #e4e7e5; --muted: #98a1a4; --line: #333b3e; --accent: #5fb7a2;
+  --cell-neutral: #3b4346; --cell-fog: #23292c; --cell-fog-struct: #394145; --mountain: #6d7478; --board-bg: #0f1214; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 14px; }
+h1 { font: 800 1.6rem/1.1 var(--f-display); font-stretch: 82%; margin: 0; }
+.setup { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.f { display: grid; gap: 3px; font-size: 0.75rem; color: var(--muted); }
+select, input[type=number] { font: 0.85rem var(--f-mono); padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+input[type=number] { width: 90px; }
+.btn { font: 600 0.85rem var(--f-mono); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { font: 0.85rem var(--f-mono); color: var(--muted); }
+.status.err { color: #c4362c; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+@media (max-width: 880px) { .main { grid-template-columns: 1fr; } }
+.stage { display: grid; gap: 8px; min-width: 0; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tick { margin-left: auto; font: 600 0.9rem var(--f-mono); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.boardwrap { overflow-x: auto; background: var(--board-bg); border-radius: 8px; padding: 8px; min-height: 120px; }
+canvas { display: block; margin: 0 auto; }
+aside { display: grid; gap: 12px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; }
+.panel h2 { font: 700 0.72rem var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+td, th { padding: 3px 6px; text-align: left; }
+th { font: 600 0.68rem var(--f-mono); color: var(--muted); text-transform: uppercase; }
+td.n { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+tr.out td { opacity: 0.4; text-decoration: line-through; }
+.sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.log { font: 0.75rem/1.6 var(--f-mono); max-height: 220px; overflow-y: auto; color: var(--muted); }
+.log b { color: var(--ink); }
+.chip { font: 0.75rem var(--f-mono); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 99px; padding: 3px 10px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.hint { font-size: 0.78rem; color: var(--muted); }
+details.obs { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+details.obs > summary { cursor: pointer; font: 700 0.8rem var(--f-mono); }
+.obsbody { display: grid; gap: 14px; margin-top: 10px; }
+.obstop { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 640px) { .obstop { grid-template-columns: minmax(0, 1fr); } }
+.obstop canvas { margin: 0; max-width: 100%; }
+.obsgroup h3 { font: 700 0.72rem var(--f-mono); color: var(--muted); margin: 0 0 6px; }
+.obsgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+.obscell { background: none; border: 0; padding: 0; color: var(--ink); text-align: left; cursor: pointer; font: 0.66rem/1.25 var(--f-mono); display: grid; gap: 3px; overflow-wrap: anywhere; }
+.obscell canvas { width: 100%; height: auto; margin: 0; border: 2px solid var(--line); }
+.obscell[aria-pressed="true"] canvas { border-color: var(--accent); }
+.obscell:focus-visible, details.obs > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.obsempty { opacity: 0.45; }
+.obsfeat { max-height: 320px; overflow: auto; }
+.obsfeat table { font-size: 0.72rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Live Game</h1>
+  <div class="setup" id="setup">
+    <label class="f" for="ckpt">checkpoint<select id="ckpt" autocomplete="off"></select></label>
+    <label class="f" for="bots">opponents<select id="bots" autocomplete="off">
+      <option value="field">mixed table (copies, older checkpoint, every bot)</option>
+      <option value="self">copies of the policy (self-play)</option>
+      <option value="past">all the older checkpoint</option>
+      <option value="selfpast">copies and older checkpoint in turn</option>
+      <option value="expander">all Expander</option><option value="hunter">all Hunter</option>
+      <option value="harvester">all Harvester</option><option value="random">all Random</option>
+      <option value="mix" selected>mix (Expander, Hunter, Harvester, Random)</option>
+      <option value="humanexe">all Human.exe (EklipZ's bot, runs in its own simulator, ~0.1 s per turn)</option></select></label>
+    <label class="f" for="past" id="pastlabel" hidden>older checkpoint<select id="past" autocomplete="off"></select></label>
+    <label class="f" for="size">map<select id="size" autocomplete="off">
+      <option value="real" selected>realistic FFA map (8 players, as in training)</option>
+      <option value="replay">map of a real game (needs data/processed/humanexe_ffa.npz)</option>
+      <option value="24">generated 24×24</option><option value="27">generated 27×27</option><option value="32">generated 32×32</option></select></label>
+    <label class="f" for="players">players (generated maps)<select id="players" autocomplete="off"><option>2</option><option>3</option><option>4</option><option>6</option><option selected>8</option></select></label>
+    <label class="f" for="seed">seed / map no.<input id="seed" type="number" value="0" min="0"></label>
+    <label class="f" for="greedy">policy<select id="greedy"><option value="0" selected>sample moves</option><option value="1">always best move</option></select></label>
+    <button class="btn primary" id="start">Start game</button>
+    <span class="status" id="status">Pick a checkpoint and start.</span>
+  </div>
+
+  <div class="main">
+    <div class="stage">
+      <div class="bar">
+        <button class="btn" id="play" disabled>▶ Play</button>
+        <button class="btn" id="stepb" disabled title="one tick (→)">+1</button>
+        <button class="btn" id="toend" disabled title="play the rest of the game without drawing every tick">⏭ to end</button>
+        <label class="f" for="speed" style="grid-auto-flow:column;align-items:center;gap:6px">speed<select id="speed">
+          <option value="2">real time (2 ticks/s)</option><option value="4">2×</option><option value="8" selected>4×</option>
+          <option value="16">8× (about the CPU limit)</option></select></label>
+        <span class="hint">view:</span>
+        <button class="chip" id="v-all" aria-pressed="true">everything</button>
+        <button class="chip" id="v-fog" aria-pressed="false">policy (fog)</button>
+        <button class="chip" id="v-policy" aria-pressed="false" title="Probability of the next move, per cell">move probabilities</button>
+        <span class="tick" id="tick"></span>
+      </div>
+      <input type="range" id="slider" min="0" max="0" value="0" aria-label="tick">
+      <div class="boardwrap"><canvas id="board"></canvas></div>
+      <div class="hint">♛ general · ▲ city · ▨ mountain · white arrows = moves of the last tick · keys: space, →, p</div>
+      <details class="obs" id="obspanel"><summary>Observations: everything the policy sees on this tick</summary>
+        <div class="obsbody">
+          <div class="obstop">
+            <div><canvas id="obsbig"></canvas><div class="hint" id="obsread">Hover a cell to read it.</div></div>
+            <div>
+              <label class="f" for="obssel">plane<select id="obssel" autocomplete="off"></select></label>
+              <p class="hint" id="obsinfo"></p>
+              <label class="hint"><input type="checkbox" id="obshide" autocomplete="off"> hide empty planes</label>
+            </div>
+          </div>
+          <div id="obsthumbs" class="obsbody"></div>
+          <div class="obsgroup"><h3>Scoreboard rows</h3><div class="obsfeat"><table id="obsplayers"></table></div></div>
+        </div>
+      </details>
+      <div class="hint" id="policyhint" hidden>Move probabilities: the number is the chance in % that the next move starts on this cell, the yellow arrow its most likely direction.</div>
+    </div>
+    <aside>
+      <div class="panel"><h2>Scoreboard</h2>
+        <table><thead><tr><th>Player</th><th class="n">Land</th><th class="n">Army</th></tr></thead><tbody id="score"></tbody></table></div>
+      <div class="panel"><h2>Policy now</h2><div class="log" id="agent">–</div></div>
+      <div class="panel"><h2>Events</h2><div class="log" id="log">–</div></div>
+      <div class="panel"><h2>Results of this session</h2>
+        <div class="log" id="summary">No finished game yet.</div>
+        <label class="hint"><input type="checkbox" id="series" autocomplete="off"> series: play each game to the end, then the next seed</label>
+        <div class="hint">A game counts as finished with a winner or at tick <span id="capshow"></span>; then players still alive are ranked by army.</div>
+        <div class="log" id="results"></div></div>
+    </aside>
+  </div>
+</div>
+<script>
+const COLORS = ["#dc4646", "#4664dc", "#3c9646", "#9646be", "#dc7828", "#289696", "#a02864", "#6e5028"];
+const $ = id => document.getElementById(id);
+const cv = $("board"), ctx = cv.getContext("2d");
+let meta = null, frames = [], idx = 0, playing = false, busy = false, done = false, fog = false, events = [], timer = null;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function api(path) {
+  const r = await fetch(path); const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+
+let checkpointList = [], showPolicy = false;
+async function loadCheckpoints() {
+  try {
+    const list = await api("/api/checkpoints");
+    checkpointList = list;
+    $("ckpt").innerHTML = list.map(c => `<option value="${esc(c.run)}|${esc(c.ckpt)}">${esc(c.run)} · ${esc(c.ckpt)}</option>`).join("");
+    $("past").innerHTML = $("ckpt").innerHTML;
+    if (!list.length) setStatus("No checkpoints in runs/. Fetch one: uv run modal volume get generals-rl /runs/test1 runs/", true);
+    else {
+      const latest = list.filter(c => c.ckpt === "latest"), pick = (latest.length ? latest : list).reduce((a, b) => (b.mtime > a.mtime ? b : a));
+      $("ckpt").value = pick.run + "|" + pick.ckpt;
+      pickOlder();
+    }
+  } catch (e) { setStatus("Could not list checkpoints: " + e.message, true); }
+}
+function pickOlder() {
+  const c = checkpointList.find(x => x.run + "|" + x.ckpt === $("ckpt").value);
+  // Older checkpoint: the oldest numbered one of the same run, else the same checkpoint.
+  if (c) {
+    const older = checkpointList.filter(x => x.run === c.run && /^\d+$/.test(x.ckpt)).sort((a, b) => +a.ckpt - +b.ckpt);
+    $("past").value = older.length ? older[0].run + "|" + older[0].ckpt : c.run + "|" + c.ckpt;
+  }
+  showPast();
+}
+function showPast() { $("pastlabel").hidden = !["past", "selfpast", "field"].includes($("bots").value); }
+const CAP = 1500;            // like the training truncation: a game still running at this tick is ranked by army
+$("capshow").textContent = CAP;
+function setStatus(t, err) { $("status").textContent = t; $("status").className = "status" + (err ? " err" : ""); }
+
+async function start() {
+  stop(); frames = []; events = []; idx = 0; done = false; obsShown = -1;
+  const [run, ckpt] = $("ckpt").value.split("|");
+  const size = $("size").value;
+  const q = new URLSearchParams({ run, ckpt, bots: $("bots").value, players: $("players").value, size, seed: $("seed").value, greedy: $("greedy").value });
+  if (!$("pastlabel").hidden) q.set("past", $("past").value);
+  outAt = {}; recorded = false;
+  $("start").disabled = true;
+  setStatus("Loading policy and compiling (the first game takes ~30-90 s on the CPU)…");
+  try {
+    meta = await api("/api/new?" + q);
+    frames = [meta.frame]; draw();
+    setStatus("Compiling the game step…");
+    await fetchMore(1);
+    setStatus(`${meta.names.length} players · ${meta.map}. Policy is red.`);
+    $("play").disabled = false; $("stepb").disabled = false; $("toend").disabled = false;
+    if ($("series").checked) toEnd(); else play();
+  } catch (e) { setStatus("Error: " + e.message, true); }
+  $("start").disabled = false;
+}
+
+async function fetchMore(n) {
+  if (busy || done) return;
+  busy = true;
+  try {
+    const { frames: fs } = await api("/api/step?n=" + n);
+    for (const f of fs) { noteEvents(frames[frames.length - 1], f); frames.push(f); }
+    const last = frames[frames.length - 1];
+    if (!fs.length || last.winner >= 0 || last.t >= CAP) { done = true; recordResult(); }
+  } finally { busy = false; }
+}
+
+// Play the rest without drawing every tick; with "series" checked, then start the next seed.
+async function toEnd() {
+  stop();
+  while (!done && meta) {
+    if (busy) { await new Promise(r => setTimeout(r, 50)); continue; }     // a step request of the player is still out
+    await fetchMore(50);
+    idx = frames.length - 1;
+    $("tick").textContent = `tick ${frames[idx].t} · playing to the end…`;
+  }
+  draw();
+  if ($("series").checked) { $("seed").value = +$("seed").value + 1; start(); }
+}
+
+let outAt = {}, recorded = false, results = [];
+function noteEvents(prev, f) {
+  f.eliminated.forEach((out, p) => {
+    if (out && !prev.eliminated[p]) { outAt[p] = f.t; events.push(`T${f.t}: <b>${esc(meta.names[p])}</b> is out`); }
+  });
+  if (f.winner >= 0) events.push(`T${f.t}: <b>${esc(meta.names[f.winner])}</b> wins`);
+}
+
+// The policy's place: players out later rank better; players still in at the end rank by army.
+function recordResult() {
+  if (recorded) return;
+  recorded = true;
+  const f = frames[frames.length - 1], n = meta.names.length;
+  const key = p => p in outAt ? [0, outAt[p]] : [1, f.winner === p ? Infinity : f.army[p]];
+  const better = (a, b) => a[0] !== b[0] ? a[0] > b[0] : a[1] > b[1];
+  const place = 1 + [...Array(n).keys()].filter(p => p !== 0 && better(key(p), key(0))).length;
+  results.push({ seed: $("seed").value, map: meta.map, opp: $("bots").options[$("bots").selectedIndex].text.split(" (")[0],
+                 ckpt: $("ckpt").value.split("|")[1], n, place, t: f.t, won: f.winner === 0 });
+  renderResults();
+}
+function renderResults() {
+  if (!results.length) return;
+  const games = results.length, wins = results.filter(r => r.won).length;
+  const meanPlace = results.reduce((a, r) => a + r.place, 0) / games, fair = results.reduce((a, r) => a + (r.n + 1) / 2, 0) / games;
+  const fairWin = results.reduce((a, r) => a + 1 / r.n, 0) / games;
+  $("summary").innerHTML = `<div><b>${games}</b> games · won <b>${wins}</b> (${(100 * wins / games).toFixed(0)} %, fair ${(100 * fairWin).toFixed(0)} %)</div>` +
+    `<div>mean place <b>${meanPlace.toFixed(2)}</b> (fair ${fair.toFixed(2)})</div>`;
+  $("results").innerHTML = results.slice().reverse().map(r =>
+    `<div>seed ${esc(r.seed)} · ${esc(r.ckpt)} vs ${esc(r.opp)} · place <b>${r.place}/${r.n}</b>${r.won ? " (won)" : ""} · T${r.t}</div>`).join("");
+}
+
+function play() {
+  playing = true; $("play").textContent = "⏸ Pause";
+  clearInterval(timer);
+  const tps = +$("speed").value, period = 1000 / Math.min(tps, 20), per = Math.max(1, Math.round(tps / 20));
+  timer = setInterval(async () => {
+    if (idx < frames.length - 1) { idx = Math.min(frames.length - 1, idx + per); draw(); return; }
+    if (done) { stop(); return; }
+    await fetchMore(Math.max(per, 2)); idx = Math.min(frames.length - 1, idx + per); draw();
+  }, period);
+}
+function stop() { playing = false; clearInterval(timer); $("play").textContent = "▶ Play"; }
+
+// Overlay: how likely the next move starts on each cell, with the most likely direction.
+function drawPolicy(f, S, cell) {
+  const top = f.policy.reduce((a, m) => Math.max(a, m[1] + m[2] + m[3] + m[4]), 0.001);
+  const steps = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const [i, ...dirs] of f.policy) {
+    const p = dirs.reduce((a, b) => a + b, 0), r = Math.floor(i / S), c = i % S, x = c * cell, y = r * cell;
+    ctx.fillStyle = `rgba(255,214,10,${(0.15 + 0.55 * Math.sqrt(p / top)).toFixed(3)})`;
+    ctx.fillRect(x + 0.5, y + 0.5, cell - 1, cell - 1);
+    if (p >= 0.01) {
+      const d = dirs.indexOf(Math.max(...dirs));
+      ctx.strokeStyle = "#ffd60a"; ctx.lineWidth = Math.max(1.5, cell * (0.06 + 0.12 * p / top)); ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(x + cell / 2, y + cell / 2); ctx.lineTo(x + cell / 2 + steps[d][1] * cell * 0.8, y + cell / 2 + steps[d][0] * cell * 0.8); ctx.stroke();
+      const t = String(Math.round(p * 100));
+      ctx.font = `700 ${cell * 0.34}px ${css("--f-mono")}`;
+      ctx.fillStyle = "#000"; ctx.fillRect(x + 1, y + 1, cell * 0.24 * t.length + 3, cell * 0.38);
+      ctx.fillStyle = "#ffd60a"; ctx.textAlign = "left"; ctx.fillText(t, x + 2.5, y + 1 + cell * 0.2); ctx.textAlign = "center";
+    }
+  }
+}
+function agentText(f) {
+  const best = f.policy.reduce((a, m) => { const p = m[1] + m[2] + m[3] + m[4]; return p > a ? p : a; }, 0);
+  return `<div>value <b>${f.value >= 0 ? "+" : ""}${f.value.toFixed(2)}</b> (−1 lost … +1 won)</div><div>pass <b>${(f.pass * 100).toFixed(0)} %</b> · top cell <b>${(best * 100).toFixed(0)} %</b></div>`;
+}
+function togglePolicy() {
+  showPolicy = !showPolicy;
+  $("v-policy").setAttribute("aria-pressed", String(showPolicy));
+  $("policyhint").hidden = !showPolicy;
+  draw();
+}
+
+// ---- All observation planes of the shown tick, fetched only while the panel is open.
+const OBS_GROUPS = [
+  ["Armies, count / 50 (log(1 + count) before version 3)", /^army_/], ["Ownership", /^(own|enemy|neutral)$/], ["Structures in sight", /^(general|castle|mountain)$/],
+  ["Fog", /^(fog|structure_in_fog)$/], ["Cells of each opponent", /^slot_/], ["Own moves, last 8 ticks", /^own_move_/],
+  ["Enemy moves, last 8 ticks", /^enemy_move_/], ["Enemy troops seen recently", /^enemy_army_recent$/],
+  ["Memory until the game ends", /^(known_|ever_seen|enemy_ever_seen|last_enemy)/], ["Own army changes", /^own_army_delta_/],
+  ["Enemy army changes", /^enemy_army_delta_/], ["Coordinates", /^coord_/],
+];
+const OBS_TEXT = {
+  known_enemy_general: "Every enemy general seen so far.", known_city: "Every city seen so far.", known_mountain: "Every mountain seen so far.",
+  ever_seen: "Cells seen at any time in this game.", enemy_ever_seen: "Cells where an enemy has been seen.", last_enemy_army: "Enemy army last seen on the cell, / 50.",
+  last_enemy_army_age: "How long ago that was: log(1 + ticks) / 5.", structure_in_fog: "Hidden cell that holds a mountain or a city.", fog: "Hidden cell without an obstacle.",
+  enemy_army_recent: "Enemy troops seen in the last 8 ticks; newer ticks weigh more.",
+};
+let obsData = null, obsPlane = "", obsBusy = false, obsWanted = -1, obsShown = -1;
+function obsInfo(name) {
+  if (OBS_TEXT[name]) return OBS_TEXT[name];
+  const delta = name.match(/_army_delta_(\d+)/);
+  if (delta) return `Change of the army on the cell ${delta[1]} tick(s) ago, / 50. Blue is a gain, red a loss.`;
+  const slot = name.match(/_(\d)$/);
+  if (name.startsWith("slot_")) return `Visible cells of the opponent in slot ${slot[1]}.`;
+  if (name.startsWith("enemy_move_")) return `Moves of the opponent in slot ${slot[1]} that were visible; the newest tick weighs 1, the oldest 1/8.`;
+  if (name.startsWith("own_move_")) return "Own moves; the newest tick weighs 1, the oldest 1/8.";
+  return "";
+}
+function paintPlane(cv, values, cell, labels) {
+  const S = meta.w, H = meta.h, dpr = devicePixelRatio || 1;
+  cv.width = S * cell * dpr; cv.height = H * cell * dpr;
+  const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const top = Math.max(1e-6, ...values.map(Math.abs)), signed = values.some(v => v < 0);
+  const base = css("--cell-neutral"), hi = css("--accent");
+  c.textAlign = "center"; c.textBaseline = "middle"; c.font = `600 ${Math.max(7, cell * 0.34)}px ${css("--f-mono")}`;
+  values.forEach((v, i) => {
+    const x = (i % S) * cell, y = Math.floor(i / S) * cell, gap = cell > 4 ? 1 : 0;
+    c.fillStyle = base; c.fillRect(x, y, cell - gap, cell - gap);
+    if (v === 0) return;
+    c.globalAlpha = 0.25 + 0.75 * Math.abs(v) / top;
+    c.fillStyle = signed ? (v > 0 ? "#3f7fe0" : "#d9483b") : hi;
+    c.fillRect(x, y, cell - gap, cell - gap);
+    c.globalAlpha = 1;
+    if (labels && cell >= 16) { c.fillStyle = css("--ink"); c.fillText(Math.abs(v) >= 10 ? Math.round(v) : Math.abs(v) >= 1 ? v.toFixed(1) : v.toFixed(2).replace("0.", "."), x + cell / 2, y + cell / 2); }
+  });
+}
+function renderBigPlane() {
+  if (!obsData || !obsPlane) return;
+  const values = obsData.planes[obsPlane], box = $("obsbig").parentElement.clientWidth || 300;
+  const cell = Math.max(6, Math.min(26, Math.floor(box / meta.w)));
+  const cv = $("obsbig"); paintPlane(cv, values, cell, true);
+  cv.style.width = meta.w * cell + "px"; cv.style.height = meta.h * cell + "px";
+  const used = values.filter(v => v !== 0).length;
+  $("obsinfo").textContent = `${obsInfo(obsPlane)} Non-zero on ${used} of ${values.length} cells, largest ${Math.max(...values.map(Math.abs)).toFixed(2)}.`;
+}
+function renderObservation() {
+  if (!obsData) return;
+  const names = Object.keys(obsData.planes), sel = $("obssel");
+  if (sel.options.length !== names.length) {
+    sel.innerHTML = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    obsPlane = names.includes(obsPlane) ? obsPlane : names[0];
+  }
+  sel.value = obsPlane;
+  const hide = $("obshide").checked, root = $("obsthumbs");
+  root.innerHTML = "";
+  for (const [title, re] of OBS_GROUPS) {
+    const list = names.filter(n => re.test(n)).filter(n => !hide || obsData.planes[n].some(v => v !== 0));
+    if (!list.length) continue;
+    const group = document.createElement("div"); group.className = "obsgroup"; group.innerHTML = `<h3>${esc(title)}</h3>`;
+    const grid = document.createElement("div"); grid.className = "obsgrid";
+    for (const n of list) {
+      const b = document.createElement("button"); b.type = "button"; b.className = "obscell"; b.setAttribute("aria-pressed", String(n === obsPlane));
+      const empty = !obsData.planes[n].some(v => v !== 0); if (empty) b.classList.add("obsempty");
+      const cv = document.createElement("canvas"); paintPlane(cv, obsData.planes[n], 5, false);
+      b.append(cv, document.createTextNode(n));
+      b.onclick = () => { obsPlane = n; renderObservation(); };
+      grid.append(b);
+    }
+    group.append(grid); root.append(group);
+  }
+  renderBigPlane();
+  const seats = meta.names.map((n, p) => `<th class="n"><span class="sw" style="background:${COLORS[p]}"></span>slot ${p}${obsData.alive[p] ? "" : " (out)"}</th>`).join("");
+  $("obsplayers").innerHTML = `<thead><tr><th>feature</th>${seats}</tr></thead><tbody>` + obsData.player_features.map((f, k) =>
+    `<tr><td>${esc(f)}</td>${obsData.players.map(r => `<td class="n">${r[k].toFixed(2)}</td>`).join("")}</tr>`).join("") + "</tbody>";
+}
+async function requestObservation() {
+  if (!$("obspanel").open || !meta) return;
+  obsWanted = idx;
+  if (obsBusy || obsShown === idx) return;
+  obsBusy = true;
+  try {
+    while (obsShown !== obsWanted) {
+      const i = obsWanted;
+      obsData = await api("/api/obs?i=" + i);
+      obsShown = i;
+      renderObservation();
+    }
+  } catch (e) { $("obsinfo").textContent = "Could not load the observation: " + e.message; }
+  obsBusy = false;
+}
+
+function draw() {
+  if (!meta) return;
+  const f = frames[idx], S = meta.w, H = meta.h;
+  const cell = Math.max(12, Math.floor(Math.min(cv.parentElement.clientWidth - 16, 820) / S));
+  const dpr = devicePixelRatio || 1;
+  cv.width = S * cell * dpr; cv.height = H * cell * dpr; cv.style.width = S * cell + "px"; cv.style.height = H * cell + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const gen = new Set(f.generals), city = new Set(f.castles), seen = new Set(f.seen);
+  for (let i = 0; i < S * H; i++) {
+    const r = Math.floor(i / S), c = i % S, x = c * cell, y = r * cell, mtn = meta.mountains[i];
+    const vis = !fog || seen.has(i);
+    let fill;
+    if (!vis) fill = mtn || city.has(i) ? css("--cell-fog-struct") : css("--cell-fog");
+    else if (mtn) fill = css("--mountain");
+    else if (f.owner[i] >= 0) fill = COLORS[f.owner[i]];
+    else fill = city.has(i) ? "#8a8f8c" : css("--cell-neutral");
+    ctx.fillStyle = fill; ctx.fillRect(x + 0.5, y + 0.5, cell - 1, cell - 1);
+    if (!vis) continue;
+    ctx.fillStyle = f.owner[i] >= 0 || mtn || city.has(i) ? "#fff" : css("--ink");
+    if (mtn) { ctx.font = `${cell * 0.55}px sans-serif`; ctx.fillText("▨", x + cell / 2, y + cell / 2); continue; }
+    if (gen.has(i) || city.has(i)) { ctx.globalAlpha = 0.35; ctx.font = `${cell * 0.8}px sans-serif`; ctx.fillText(gen.has(i) ? "♛" : "▲", x + cell / 2, y + cell / 2 + 1); ctx.globalAlpha = 1; }
+    const a = f.armies[i];
+    if (a > 0) { const t = a >= 10000 ? Math.round(a / 1000) + "k" : String(a); ctx.font = `600 ${Math.min(cell * 0.42, cell * 1.6 / Math.max(2, t.length))}px "JetBrains Mono", monospace`; ctx.fillText(t, x + cell / 2, y + cell / 2 + 1); }
+  }
+  ctx.lineWidth = Math.max(1.5, cell * 0.09); ctx.lineCap = "round";
+  for (const [p, s, e] of f.moves || []) {
+    if (fog && !seen.has(s) && !seen.has(e)) continue;
+    const x0 = (s % S + 0.5) * cell, y0 = (Math.floor(s / S) + 0.5) * cell, x1 = (e % S + 0.5) * cell, y1 = (Math.floor(e / S) + 0.5) * cell;
+    const mx = x0 + (x1 - x0) * 0.8, my = y0 + (y1 - y0) * 0.8, ang = Math.atan2(y1 - y0, x1 - x0), hs = cell * 0.18;
+    ctx.strokeStyle = p === 0 ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.6)";
+    ctx.beginPath(); ctx.moveTo(x0 + (x1 - x0) * 0.25, y0 + (y1 - y0) * 0.25); ctx.lineTo(mx, my);
+    ctx.moveTo(mx, my); ctx.lineTo(mx - hs * Math.cos(ang - 0.6), my - hs * Math.sin(ang - 0.6));
+    ctx.moveTo(mx, my); ctx.lineTo(mx - hs * Math.cos(ang + 0.6), my - hs * Math.sin(ang + 0.6)); ctx.stroke();
+  }
+  if (showPolicy) drawPolicy(f, S, cell);
+  requestObservation();
+  $("agent").innerHTML = f.policy ? agentText(f) : "–";
+  $("tick").textContent = `tick ${f.t} · turn ${Math.floor(f.t / 2)}` + (done && idx === frames.length - 1 ? " · game over" : "");
+  $("slider").max = frames.length - 1; $("slider").value = idx;
+  const rows = meta.names.map((n, p) => ({ p, n, land: f.land[p], army: f.army[p], out: f.eliminated[p] })).sort((a, b) => b.army - a.army);
+  $("score").innerHTML = rows.map(r => `<tr class="${r.out ? "out" : ""}"><td><span class="sw" style="background:${COLORS[r.p]}"></span>${esc(r.n)}</td><td class="n">${r.land}</td><td class="n">${r.army}</td></tr>`).join("");
+  const ev = events.filter(e => +e.match(/^T(\d+)/)[1] <= f.t);
+  $("log").innerHTML = ev.length ? ev.slice().reverse().map(e => `<div>${e}</div>`).join("") : "No eliminations yet.";
+}
+
+$("start").onclick = start;
+$("v-policy").onclick = togglePolicy;
+$("obspanel").ontoggle = () => { obsShown = -1; requestObservation(); };
+$("obssel").onchange = e => { obsPlane = e.target.value; renderObservation(); };
+$("obshide").onchange = renderObservation;
+$("obsbig").onmousemove = e => {
+  if (!obsData || !obsPlane) return;
+  const b = e.target.getBoundingClientRect(), c = Math.floor((e.clientX - b.left) / b.width * meta.w), r = Math.floor((e.clientY - b.top) / b.height * meta.h);
+  const v = obsData.planes[obsPlane][r * meta.w + c];
+  if (v !== undefined) $("obsread").textContent = `row ${r}, column ${c}: ${v}`;
+};
+$("ckpt").onchange = pickOlder;
+$("bots").onchange = showPast;
+$("toend").onclick = toEnd;
+$("play").onclick = () => playing ? stop() : play();
+$("stepb").onclick = async () => { stop(); if (idx >= frames.length - 1) await fetchMore(1); idx = Math.min(frames.length - 1, idx + 1); draw(); };
+$("speed").onchange = () => { if (playing) play(); };
+$("slider").oninput = e => { stop(); idx = +e.target.value; draw(); };
+$("v-all").onclick = () => { fog = false; $("v-all").setAttribute("aria-pressed", "true"); $("v-fog").setAttribute("aria-pressed", "false"); draw(); };
+$("v-fog").onclick = () => { fog = true; $("v-fog").setAttribute("aria-pressed", "true"); $("v-all").setAttribute("aria-pressed", "false"); draw(); };
+document.addEventListener("keydown", e => {
+  if (["SELECT", "INPUT"].includes(e.target.tagName) || !meta) return;
+  if (e.key === " ") { e.preventDefault(); playing ? stop() : play(); }
+  if (e.key === "p") togglePolicy();
+  if (e.key === "ArrowRight") { e.preventDefault(); $("stepb").click(); }
+});
+addEventListener("resize", draw);
+loadCheckpoints();
+</script>
+</body>
+</html>
